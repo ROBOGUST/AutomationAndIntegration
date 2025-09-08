@@ -1,5 +1,7 @@
 ﻿using AutomationAndIntegration.Data;
+using AutomationAndIntegration.Helpers;
 using AutomationAndIntegration.Models;
+using AutomationAndIntegration.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace AutomationAndIntegration
@@ -10,26 +12,13 @@ namespace AutomationAndIntegration
         {
             using (var db = new WebshopContext())
             {
-                db.Database.Migrate(); // Create DB if it does not exist
+                db.Database.Migrate();
                 SeedData.Initialize(db);
 
-                Console.WriteLine("Databasen är initierad!");
-                Console.WriteLine("Users i systemet:");
-                foreach (var user in db.Users)
-                {
-                    Console.WriteLine($" - {user.Username} ({user.Role})");
-                }
+                var authService = new AuthService(db);
 
-                Console.WriteLine("\nProdukter i lager:");
-                foreach (var product in db.Products)
-                {
-                    Console.WriteLine($" - {product.Name} ({product.Stock} st) {product.Price} kr");
-                }
-
-                // TODO: login & register
+                MenuHelper.ShowMainMenu(authService);
             }
-
-
         }
     }
 }
