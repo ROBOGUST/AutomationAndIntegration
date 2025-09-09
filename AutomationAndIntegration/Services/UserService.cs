@@ -72,7 +72,7 @@ namespace AutomationAndIntegration.Services
 
             Console.WriteLine($"Order skapad (ID: {order.Id}, Total: {total} kr). Status: {order.Status}");
 
-            var paymentService = new PaymentService();
+            var paymentService = new PaymentService("MERCHANT_ID", "SHARED_SECRET");
 
             Console.WriteLine("\nVälj betalningsmetod:");
             Console.WriteLine("1. Klarna");
@@ -84,8 +84,9 @@ namespace AutomationAndIntegration.Services
             switch (choice)
             {
                 case "1":
-                    paymentService.ProcessKlarnaPayment(order);
-                    break;
+                    var klarnaResult = paymentService.ProcessKlarnaPaymentAsync(order).Result;
+                    if (klarnaResult)
+                        _db.SaveChanges(); break;
                 case "2":
                     paymentService.ProcessSwishPayment(order);
                     break;
