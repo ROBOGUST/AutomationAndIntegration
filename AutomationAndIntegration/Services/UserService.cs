@@ -71,6 +71,33 @@ namespace AutomationAndIntegration.Services
             _db.SaveChanges();
 
             Console.WriteLine($"Order skapad (ID: {order.Id}, Total: {total} kr). Status: {order.Status}");
+
+            var paymentService = new PaymentService();
+
+            Console.WriteLine("\nVälj betalningsmetod:");
+            Console.WriteLine("1. Klarna");
+            Console.WriteLine("2. Swish");
+            Console.WriteLine("3. Avbryt (lämna som 'Ej betald')");
+            Console.Write("Val: ");
+
+            string? choice = Console.ReadLine();
+            switch (choice)
+            {
+                case "1":
+                    paymentService.ProcessKlarnaPayment(order);
+                    break;
+                case "2":
+                    paymentService.ProcessSwishPayment(order);
+                    break;
+                case "3":
+                    Console.WriteLine("Ordern sparas som 'Ej betald'.");
+                    break;
+                default:
+                    Console.WriteLine("Ogiltigt val, ordern sparas som 'Ej betald'.");
+                    break;
+            }
+
+            _db.SaveChanges();
         }
 
         public void ShowMyOrders(User user)
