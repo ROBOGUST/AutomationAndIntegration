@@ -56,8 +56,57 @@ namespace AutomationAndIntegration.Helpers
 
         private static void ShowAdminMenu(User admin, WebshopContext db)
         {
-            Console.WriteLine($"\nAdminpanel ({admin.Username})");
-            Console.WriteLine("Här kan vi senare bygga admin-funktioner.");
+            var adminService = new AdminService(db);
+
+            bool inMenu = true;
+            while (inMenu)
+            {
+                Console.WriteLine($"\nAdminpanel - {admin.Username}");
+                Console.WriteLine("1. Lista användare");
+                Console.WriteLine("2. Lista produkter");
+                Console.WriteLine("3. Lägg till produkt");
+                Console.WriteLine("4. Uppdatera lager");
+                Console.WriteLine("5. Visa alla ordrar");
+                Console.WriteLine("6. Uppdatera orderstatus");
+                Console.WriteLine("0. Logga ut");
+                Console.Write("Val: ");
+
+                string? input = Console.ReadLine();
+                switch (input)
+                {
+                    case "1":
+                        adminService.ShowUsers();
+                        break;
+
+                    case "2":
+                        adminService.ShowProducts();
+                        break;
+
+                    case "3":
+                        adminService.AddProduct();
+                        break;
+
+                    case "4":
+                        adminService.UpdateStock();
+                        break;
+
+                    case "5":
+                        adminService.ShowAllOrders();
+                        break;
+
+                    case "6":
+                        adminService.UpdateOrderStatus();
+                        break;
+
+                    case "0":
+                        inMenu = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("Felaktigt val.");
+                        break;
+                }
+            }
         }
 
         private static void ShowUserMenu(User user, WebshopContext db)
