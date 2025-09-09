@@ -102,22 +102,76 @@ namespace AutomationAndIntegration.Services
 
         public void ShowMyOrders(User user)
         {
-            Console.WriteLine($"\nOrdrar för {user.Username}:");
-            var orders = _db.Orders
-                            .Where(o => o.UserId == user.Id)
-                            .OrderByDescending(o => o.CreatedAt)
-                            .ToList();
+            Console.WriteLine($"\nOrderhistorik för {user.Username}:");
+
+            Console.WriteLine("\nFiltrera ordrar:");
+            Console.WriteLine("1. Alla");
+            Console.WriteLine("2. Endast Ej betalda");
+            Console.WriteLine("3. Endast Betalda/Avslutade");
+            Console.Write("Val: ");
+
+            string? choice = Console.ReadLine();
+
+            var query = _db.Orders.AsQueryable().Where(o => o.UserId == user.Id);
+
+            switch (choice)
+            {
+                case "2":
+                    query = query.Where(o => o.Status == "Ej betald");
+                    break;
+                case "3":
+                    query = query.Where(o => o.Status == "Betald" || o.Status == "Skickad" || o.Status == "Klar");
+                    break;
+                case "1":
+                default:
+                    break;
+            }
+
+            var orders = query.OrderByDescending(o => o.CreatedAt).ToList();
 
             if (!orders.Any())
             {
-                Console.WriteLine("Inga ordrar hittades.");
+                Console.WriteLine("Inga ordrar hittades med valt filter.");
                 return;
             }
 
-            foreach (var o in orders)
+            double totalSpent = 0;
+
+            foreach (var order in orders)
             {
-                Console.WriteLine($" - Order {o.Id}: {o.Status}, Total: {o.TotalAmount} kr, Skapad: {o.CreatedAt}");
+                Console.WriteLine($"\n   --- Order {order.Id} ---");
+                Console.WriteLine($"Datum: {order.CreatedAt}");
+                Console.WriteLine($"Status: {order.Status}");
+                Console.WriteLine($"Total: {order.TotalAmount} kr");
+
+                totalSpent += order.TotalAmount;
+
+                var items = _db.OrderItems
+                               .Where(i => i.OrderId == order.Id)
+                               .ToList();
+
+                if (!items.Any())
+                {
+                    Console.WriteLine("(Inga produkter registrerade)");
+                }
+                else
+                {
+                    Console.WriteLine("Produkter:");
+                    foreach (var item in items)
+                    {
+                        var product = _db.Products.FirstOrDefault(p => p.Id == item.ProductId);
+                        if (product != null)
+                        {
+                            Console.WriteLine($"    - {product.Name} x{item.Quantity} ({product.Price} kr/st)");
+                        }
+                    }
+                }
             }
+
+            Console.WriteLine("\n===============================");
+            Console.WriteLine($"Totalt antal ordrar: {orders.Count}");
+            Console.WriteLine($"Totalt spenderat: {totalSpent} kr");
+            Console.WriteLine("===============================");
         }
     }
 }

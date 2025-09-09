@@ -6,6 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AutomationAndIntegration
 {
+
+    /*
+        TODO: 
+    Add real DB
+    Add OT system to adjust stock automatically and increase stock when low
+    Add real payment gateways
+    Add email service to send order confirmations
+    Add logging
+    Add workflow engine (OT) for order processing after confirmed payment
+     */
+
     internal class Program
     {
         static void Main(string[] args)
