@@ -29,13 +29,13 @@ namespace AutomationAndIntegration.Services
             var user = _db.Users.FirstOrDefault(u => u.Username == username);
             if (user == null)
             {
-                Console.WriteLine("Användaren finns inte!");
+                Console.WriteLine("Användare eller lösenord är fel!");
                 return null;
             }
 
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
-                Console.WriteLine("Fel lösenord!");
+                Console.WriteLine("Användare eller lösenord är fel!");
                 return null;
             }
 
@@ -46,7 +46,13 @@ namespace AutomationAndIntegration.Services
         public void Register()
         {
             Console.Write("Välj användarnamn: ");
-            string username = Console.ReadLine() ?? "";
+            string username = (Console.ReadLine() ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(username) || username.Length < 3)
+            {
+                Console.WriteLine("Användarnamnet måste vara minst 3 tecken.");
+                return;
+            }
 
             if (_db.Users.Any(u => u.Username == username))
             {
@@ -56,6 +62,12 @@ namespace AutomationAndIntegration.Services
 
             Console.Write("Välj lösenord: ");
             string password = ReadPassword();
+
+            if (password.Length < 6)
+            {
+                Console.WriteLine("Lösenordet måste vara minst 6 tecken långt.");
+                return;
+            }
 
             string hash = BCrypt.Net.BCrypt.HashPassword(password);
 

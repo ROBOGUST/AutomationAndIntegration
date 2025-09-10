@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AutomationAndIntegration.Data;
 using AutomationAndIntegration.Models;
 
@@ -164,6 +163,93 @@ namespace AutomationAndIntegration.Services
             _db.SaveChanges();
 
             Console.WriteLine($"Order {order.Id} uppdaterad till '{newStatus}'.");
+        }
+
+        public void ShowAllOrdersReport()
+        {
+            Console.WriteLine("\nOrderrapport (Admin)");
+
+            Console.WriteLine("\nFiltrera ordrar:");
+            Console.WriteLine("1. Alla");
+            Console.WriteLine("2. Endast Ej betalda");
+            Console.WriteLine("3. Endast Betalda/Avslutade");
+            Console.Write("Val: ");
+
+            string? choice = Console.ReadLine();
+
+            var query = _db.Orders.AsQueryable();
+
+            switch (choice)
+            {
+                case "2":
+                    query = query.Where(o => o.Status == "Ej betald");
+                    break;
+                case "3":
+                    query = query.Where(o => o.Status == "Betald" || o.Status == "Skickad" || o.Status == "Klar");
+                    break;
+                case "1":
+                default:
+                    break;
+            }
+
+            var orders = query.OrderByDescending(o => o.CreatedAt).ToList();
+
+            if (!orders.Any())
+            {
+                Console.WriteLine("Inga ordrar hittades med valt filter.");
+                return;
+            }
+
+            double totalOmsättning = 0;
+
+            Console.WriteLine("\n--- Orderlista ---");
+            foreach (var order in orders)
+            {
+                var user = _db.Users.FirstOrDefault(u => u.Id == order.UserId);
+
+                Console.WriteLine($"\nOrder {order.Id} | Kund: {user?.Username}");
+                Console.WriteLine($"{order.CreatedAt}");
+                Console.WriteLine($"Status: {order.Status}");
+                Console.WriteLine($"Total: {order.TotalAmount} kr");
+
+                totalOmsättning += order.TotalAmount;
+            }
+
+            Console.WriteLine("\n===============================");
+            Console.WriteLine($"Totalt antal ordrar: {orders.Count}");
+            Console.WriteLine($"Total omsättning: {totalOmsättning} kr");
+            Console.WriteLine("===============================");
+
+            Console.WriteLine("\nVill du exportera rapporten till CSV? (j/n)");
+            string? exportChoice = Console.ReadLine();
+
+            if (exportChoice?.ToLower() == "j")
+            {
+                ExportToCsv(orders);
+            }
+        }
+
+        private void ExportToCsv(List<Order> orders)
+        {
+            string projectRoot = AppDomain.CurrentDomain.BaseDirectory;
+            string reportsFolder = Path.Combine(projectRoot, "Reports");
+            Directory.CreateDirectory(reportsFolder);
+
+            string filePath = Path.Combine(reportsFolder, $"OrderRapport_{DateTime.Now:yyyyMMdd_HHmm}.csv");
+
+            using (var writer = new StreamWriter(filePath))
+            {
+                writer.WriteLine("OrderId,Kund,Datum,Status,Total");
+
+                foreach (var order in orders)
+                {
+                    var user = _db.Users.FirstOrDefault(u => u.Id == order.UserId);
+
+                    writer.WriteLine($"{order.Id},{user?.Username},{order.CreatedAt},{order.Status},{order.TotalAmount}");
+                }
+            }
+
+            Console.WriteLine($"Rapport exporterad till: {filePath}");
         }
     }
 }
