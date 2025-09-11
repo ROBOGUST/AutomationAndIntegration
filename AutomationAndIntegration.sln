@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36202.13 d17.14
+VisualStudioVersion = 17.14.36202.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomationAndIntegration", "AutomationAndIntegration\AutomationAndIntegration.csproj", "{9B2EFD7B-A09A-4205-B7C3-9A60BB8F2F91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OTSystem", "OTSystem\OTSystem.csproj", "{B8D9E34D-7275-4C29-B821-38FBD3B8FF00}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{9B2EFD7B-A09A-4205-B7C3-9A60BB8F2F91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B2EFD7B-A09A-4205-B7C3-9A60BB8F2F91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B2EFD7B-A09A-4205-B7C3-9A60BB8F2F91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8D9E34D-7275-4C29-B821-38FBD3B8FF00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8D9E34D-7275-4C29-B821-38FBD3B8FF00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8D9E34D-7275-4C29-B821-38FBD3B8FF00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8D9E34D-7275-4C29-B821-38FBD3B8FF00}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
