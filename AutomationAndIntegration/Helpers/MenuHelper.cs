@@ -68,6 +68,8 @@ namespace AutomationAndIntegration.Helpers
                 Console.WriteLine("4. Uppdatera lager");
                 Console.WriteLine("5. Visa alla ordrar");
                 Console.WriteLine("6. Uppdatera orderstatus");
+                Console.WriteLine("7. Visa orderrapport");
+                Console.WriteLine("8. Visa loggar");
                 Console.WriteLine("0. Logga ut");
                 Console.Write("Val: ");
 
@@ -96,6 +98,13 @@ namespace AutomationAndIntegration.Helpers
 
                     case "6":
                         adminService.UpdateOrderStatus();
+                        break;
+
+                    case "7":
+                        adminService.ShowAllOrdersReport();
+                        break;
+                    case "8":
+                        adminService.ShowLogs();
                         break;
 
                     case "0":

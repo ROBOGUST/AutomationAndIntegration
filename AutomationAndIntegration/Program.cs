@@ -26,7 +26,8 @@ namespace AutomationAndIntegration
                 db.Database.Migrate();
                 SeedData.Initialize(db);
 
-                var authService = new AuthService(db);
+                var logger = new LoggerService(db);
+                var authService = new AuthService(db, logger);
 
                 MenuHelper.ShowMainMenu(authService);
             }

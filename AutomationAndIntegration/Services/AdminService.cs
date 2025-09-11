@@ -251,5 +251,20 @@ namespace AutomationAndIntegration.Services
 
             Console.WriteLine($"Rapport exporterad till: {filePath}");
         }
+
+        public void ShowLogs()
+        {
+            var logs = _db.AuditLogs
+                    .OrderByDescending(l => l.Timestamp)
+                    .Take(50)
+                    .ToList();
+
+            Console.WriteLine("\nSenaste loggade händelser:");
+            foreach (var log in logs)
+            {
+                Console.WriteLine($"{log.Timestamp}: [{log.EventType}] {log.Message} (User: {log.Username ?? "N/A"})");
+            }
+        }
+
     }
 }
