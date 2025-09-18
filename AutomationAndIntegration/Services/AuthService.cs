@@ -93,7 +93,6 @@ namespace AutomationAndIntegration.Services
             Console.WriteLine("Registrering klar! Du kan nu logga in.");
         }
 
-        // Method to hide the password in console
         private string ReadPassword()
         {
             string pass = "";

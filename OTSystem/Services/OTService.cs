@@ -1,123 +1,91 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
-using AutomationAndIntegration.Data;
-using AutomationAndIntegration.Models;
+using EasyModbus;
 
 namespace OTSystem.Services
 {
     public class OTService
     {
-        private readonly WebshopContext _db;
-        private readonly int _restockThreshold;
-        private readonly int _restockAmount;
+        private readonly ModbusServer _server;
+        private readonly HashSet<int> _processing = new();
+        private readonly object _lock = new();
 
-        public OTService(WebshopContext db, int restockThreshold = 5, int restockAmount = 20)
+        public OTService()
         {
-            _db = db;
-            _restockThreshold = restockThreshold;
-            _restockAmount = restockAmount;
+            _server = new ModbusServer();
         }
 
-        public void StartMonitoring()
+        public void Start()
         {
-            Console.WriteLine("OT-systemet startat. Lager övervakas...");
-            while (true)
+            _server.Listen();
+
+            _server.holdingRegisters[0] = 20; 
+            _server.holdingRegisters[1] = 0; 
+            _server.holdingRegisters[2] = 0;  
+
+            Console.WriteLine("[OT] Server startad (lager=20, orderId=0, status=0).");
+
+            new Thread(() =>
             {
-                ProcessOrders();
+                while (true)
+                {
+                    int orderId = _server.holdingRegisters[1];
+                    int status = _server.holdingRegisters[2];
+
+                    if (orderId > 0 && status == 1) 
+                    {
+                        lock (_lock)
+                        {
+                            if (!_processing.Contains(orderId))
+                            {
+                                _processing.Add(orderId);
+                                Console.WriteLine($"[OT] Ny order upptäckt: {orderId}");
+
+                                new Thread(() => SimulateOrderFlow(orderId))
+                                {
+                                    IsBackground = true
+                                }.Start();
+
+                                _server.holdingRegisters[1] = 0; 
+                            }
+                        }
+                    }
+
+                    Thread.Sleep(1000);
+                }
+            })
+            { IsBackground = true }.Start();
+        }
+
+        private void SimulateOrderFlow(int orderId)
+        {
+            short[] statuses = { 1, 2, 3, 4 };
+            string[] labels = { "Betald", "Packas", "Skickad", "Klar" };
+
+            for (int i = 0; i < statuses.Length; i++)
+            {
                 Thread.Sleep(5000);
-            }
-        }
+                _server.holdingRegisters[2] = statuses[i];
+                Console.WriteLine($"[OT] Order {orderId} → {labels[i]}");
 
-        private void ProcessOrders()
-        {
-            var newOrders = _db.Orders
-                               .Where(o => o.Status == "Ej betald" || o.Status.StartsWith("Väntar"))
-                               .OrderBy(o => o.CreatedAt)
-                               .ToList();
-
-            foreach (var order in newOrders)
-            {
-                if (!CanFulfill(order))
+                if (statuses[i] == 2)
                 {
-                    order.Status = "Väntar på lager (10s)";
-                    _db.SaveChanges();
-                    Console.WriteLine($"[OT] Order {order.Id} väntar på lager. Restock sker om 10s...");
+                    _server.holdingRegisters[0] -= 5;
+                    Console.WriteLine($"[OT] Lager minskat: {_server.holdingRegisters[0]} kvar");
 
-                    Thread.Sleep(10000);
-
-                    ForceRestock(order);
-                    continue;
-                }
-
-                SimulateOrderFlow(order);
-            }
-        }
-
-        private bool CanFulfill(Order order)
-        {
-            foreach (var item in order.Items)
-            {
-                var product = _db.Products.FirstOrDefault(p => p.Id == item.ProductId);
-                if (product == null || product.Stock < item.Quantity)
-                    return false;
-            }
-            return true;
-        }
-
-        private void ForceRestock(Order order)
-        {
-            foreach (var item in order.Items)
-            {
-                var product = _db.Products.FirstOrDefault(p => p.Id == item.ProductId);
-                if (product != null && product.Stock < item.Quantity)
-                {
-                    int needed = item.Quantity - product.Stock;
-                    int restock = Math.Max(_restockAmount, needed);
-                    product.Stock += restock;
-                    Console.WriteLine($"[OT] Produkt '{product.Name}' restockad med {restock}. Nytt lager: {product.Stock}");
+                    if (_server.holdingRegisters[0] < 5)
+                    {
+                        Console.WriteLine("[OT] Lågt lager, fyller på...");
+                        Thread.Sleep(10000);
+                        _server.holdingRegisters[0] += 20;
+                        Console.WriteLine($"[OT] Lager påfyllt: {_server.holdingRegisters[0]} st");
+                    }
                 }
             }
 
-            _db.SaveChanges();
-            Console.WriteLine($"[OT] Restock klar. Order {order.Id} kan nu processas.");
-
-            SimulateOrderFlow(order);
-        }
-
-        private void SimulateOrderFlow(Order order)
-        {
-            UpdateOrderStatus(order, "Order mottagen");
-            Thread.Sleep(5000);
-
-            UpdateOrderStatus(order, "Dina varor packas");
-            Thread.Sleep(5000);
-
-            foreach (var item in order.Items)
-            {
-                var product = _db.Products.First(p => p.Id == item.ProductId);
-                product.Stock -= item.Quantity;
-            }
-            _db.SaveChanges();
-
-            UpdateOrderStatus(order, "Ditt paket är nu skickat");
-            Thread.Sleep(5000);
-
-            UpdateOrderStatus(order, "Klar");
-        }
-
-        private void UpdateOrderStatus(Order order, string newStatus)
-        {
-            order.Status = newStatus;
-            _db.SaveChanges();
-
-            var user = _db.Users.FirstOrDefault(u => u.Id == order.UserId);
-            string userMsg = user != null ? $"Till {user.Username}" : "Till okänd användare";
-
-            Console.WriteLine($"[OT] {userMsg}: Order {order.Id} → {newStatus}");
+            Console.WriteLine($"[OT] Order {orderId} färdig.");
+            lock (_lock) { _processing.Remove(orderId); }
         }
     }
 }

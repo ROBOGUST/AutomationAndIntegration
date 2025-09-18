@@ -1,10 +1,11 @@
-﻿using System;
+﻿using AutomationAndIntegration.Models;
+using BCrypt.Net;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BCrypt.Net;
-using AutomationAndIntegration.Models;
 
 namespace AutomationAndIntegration.Data
 {
@@ -12,7 +13,8 @@ namespace AutomationAndIntegration.Data
     {
         public static void Initialize(WebshopContext db)
         {
-            // Admin for testing
+            db.Database.Migrate();
+
             if (!db.Users.Any(u => u.Username == "admin"))
             {
                 db.Users.Add(new User
@@ -23,7 +25,6 @@ namespace AutomationAndIntegration.Data
                 });
             }
 
-            // User for testing
             if (!db.Users.Any(u => u.Username == "user"))
             {
                 db.Users.Add(new User
@@ -37,8 +38,10 @@ namespace AutomationAndIntegration.Data
             if (!db.Products.Any())
             {
                 db.Products.AddRange(
-                    new Product { Name = "Warhammer Space Marines", Stock = 10, Price = 399 },
-                    new Product { Name = "Citadel Paint Black", Stock = 25, Price = 45 },
+                    new Product { Name = "Warhammer Space Marines", Stock = 10, Price = 699 },
+                    new Product { Name = "Warhammer Chaos Marines", Stock = 10, Price = 699 },
+                    new Product { Name = "Citadel Paint Spray", Stock = 25, Price = 199 },
+                    new Product { Name = "Citadel Paint Set", Stock = 10, Price = 499 },
                     new Product { Name = "Detail Brush", Stock = 15, Price = 89 }
                 );
             }

@@ -6,31 +6,28 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AutomationAndIntegration
 {
-
-    /*
-        TODO: 
-    Add real DB
-    Add OT system to adjust stock automatically and increase stock when low
-    Add real payment gateways
-    Add email service to send order confirmations
-    Add logging
-    Add workflow engine (OT) for order processing after confirmed payment
-     */
-
     internal class Program
     {
         static void Main(string[] args)
         {
-            using (var db = new WebshopContext())
+            using var db = new WebshopContext();
+            try
             {
-                db.Database.Migrate();
+                Console.WriteLine("Using DB: " + db.Database.GetDbConnection().DataSource);
                 SeedData.Initialize(db);
-
-                var logger = new LoggerService(db);
-                var authService = new AuthService(db, logger);
-
-                MenuHelper.ShowMainMenu(authService);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("WARN: Databasinit misslyckades: " + ex.Message);
+                Console.WriteLine(ex.StackTrace);
+            }
+
+            var logger = new LoggerService(db);
+            var authService = new AuthService(db, logger);
+            var userService = new UserService(db);
+            var adminService = new AdminService(db);
+            MenuHelper.ShowMainMenu(authService);
+
         }
     }
 }
